@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  issup_backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8448:8448"
+    env_file:
+      - ./backend/.env
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8449:8449"
+    env_file:
+      - ./ai-engine/.env
