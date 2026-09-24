@@ -476,7 +476,7 @@ export const generateScreeningPDF = async (results) => {
     }
     const pgsiColor = pgsiColorMap[pgsiCategory] || colors.green
 
-    checkPageBreak(35)
+    checkNewPage(35)
     // Score box
     doc.setFillColor(245, 245, 250)
     doc.roundedRect(margin, yPosition, 50, 24, 3, 3, 'F')
