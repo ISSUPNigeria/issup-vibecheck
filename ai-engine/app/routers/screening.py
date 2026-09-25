@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Any
-from openai import OpenAI
+from google import genai
 from ..config import settings
 import json
 
@@ -21,30 +21,25 @@ async def generate_screening_feedback(request: ScreeningFeedbackRequest):
     Generate personalized, empathetic feedback using OpenAI based on screening results
     """
     try:
-        client = OpenAI(api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_BASE_URL)
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
         # Prepare context for AI
         context = prepare_screening_context(request)
 
         # Generate feedback using OpenAI
-        response = client.chat.completions.create(
+        prompt = f"""
+{get_system_prompt()}
+
+{context}
+"""
+
+        response = client.models.generate_content(
             model=settings.MODEL_NAME,
-            temperature=settings.TEMPERATURE,
-            max_tokens=settings.MAX_TOKENS,
-            messages=[
-                {
-                    "role": "system",
-                    "content": get_system_prompt()
-                },
-                {
-                    "role": "user",
-                    "content": context
-                }
-            ]
+            contents=prompt
         )
 
         # Parse AI response
-        ai_response = response.choices[0].message.content
+        ai_response = response.text
         feedback = parse_ai_feedback(ai_response)
 
         return {

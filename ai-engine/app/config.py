@@ -1,17 +1,22 @@
 from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
-    OPENAI_API_KEY: str
+    OPENAI_API_KEY: Optional[str] = None
     OPENAI_BASE_URL: Optional[str] = None
-    ENVIRONMENT: str = "development"
-    MODEL_NAME: str = "gpt-4o-mini"
-    TEMPERATURE: float = 0.7
-    MAX_TOKENS: int = 1000
-    BACKEND_URL: str = "http://localhost:8448"
+    GEMINI_API_KEY: Optional[str] = None
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    ENVIRONMENT: Optional[str] = None
+    MODEL_NAME: Optional[str] = None
+    TEMPERATURE: Optional[float] = 0.7
+    MAX_TOKENS: Optional[int] = 1000
+    BACKEND_URL: Optional[str] = None
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore"
+    )
+
 
 settings = Settings()

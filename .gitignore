@@ -89,4 +89,4 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
-nul
+nulai-engine/.env.backup

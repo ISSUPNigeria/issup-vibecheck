@@ -10,7 +10,7 @@ Tools available:
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-from openai import OpenAI
+from google import genai
 import httpx
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage, AIMessage
@@ -63,7 +63,7 @@ def analyze_crisis_risk(user_message: str) -> str:
     Returns:
         Analysis indicating if crisis detected and severity level
     """
-    client = OpenAI(api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_BASE_URL)
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
     crisis_analysis_prompt = """Analyze this message for crisis indicators:
 
@@ -84,17 +84,25 @@ Example format:
 HIGH RISK: The user mentions recent self-harm behavior and feelings of hopelessness.
 """
 
-    response = client.chat.completions.create(
+    prompt = f"""
+You are a crisis assessment specialist.
+
+Always start your response with exactly one of:
+
+IMMEDIATE CRISIS:
+HIGH RISK:
+MODERATE CONCERN:
+LOW CONCERN:
+
+{crisis_analysis_prompt.format(message=user_message)}
+"""
+
+    response = client.models.generate_content(
         model=settings.MODEL_NAME,
-        messages=[
-            {"role": "system", "content": "You are a crisis assessment specialist. Always start your response with the exact risk level label."},
-            {"role": "user", "content": crisis_analysis_prompt.format(message=user_message)}
-        ],
-        temperature=0.3,
-        max_tokens=150
+        contents=prompt
     )
 
-    return response.choices[0].message.content
+    return response.text
 
 
 @tool

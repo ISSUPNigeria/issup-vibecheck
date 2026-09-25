@@ -5,7 +5,7 @@ Uses create_react_agent pattern for better state management and conversation flo
 
 from typing import TypedDict, Annotated, Sequence
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage, ToolMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langgraph.prebuilt import create_react_agent
 from langgraph.graph import StateGraph, END
@@ -38,15 +38,13 @@ def create_mental_health_agent(tools: list, session_id: str, screening_context: 
     Returns:
         Compiled LangGraph agent
     """
-    # Initialize LLM
-    llm = ChatOpenAI(
-        model=settings.MODEL_NAME,
-        temperature=0.8,  # Increased for more natural, conversational responses
-        openai_api_key=settings.OPENAI_API_KEY,
-        base_url=settings.OPENAI_BASE_URL,
-        streaming=True
-    )
+    
 
+    llm = ChatGoogleGenerativeAI(
+    model=settings.MODEL_NAME,
+    google_api_key=settings.GEMINI_API_KEY,
+    temperature=0.8,
+    )
     # Build system prompt with screening context and demographics
     # PHASE 1 OPTIMIZATION: Pass screening_context for conditional loading
     system_prompt = get_chatbot_system_prompt(screening_context=screening_context)
@@ -320,10 +318,22 @@ def process_agent_response(agent_output: dict) -> tuple[str, bool, bool]:
     messages = agent_output.get("messages", [])
 
     assistant_message = ""
+    
+
     for msg in reversed(messages):
-        if isinstance(msg, AIMessage):
-            assistant_message = msg.content
-            break
+        if hasattr(msg, "content"):
+
+            if isinstance(msg.content, list):
+                assistant_message = " ".join(
+                    item.get("text", "")
+                    for item in msg.content
+                    if isinstance(item, dict)
+                )
+            else:
+                assistant_message = str(msg.content)
+
+            if assistant_message:
+                break
 
     # Detect crisis and resources in a smarter way
     crisis_detected = False

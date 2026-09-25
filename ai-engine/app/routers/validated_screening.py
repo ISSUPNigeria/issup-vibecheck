@@ -4,7 +4,7 @@ AI Feedback Generation for Validated Screening (ASSIST + PHQ-9 + Triggers)
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
-from openai import OpenAI
+from google import genai
 from ..config import settings
 import json
 
@@ -38,30 +38,25 @@ async def generate_validated_screening_feedback(request: ValidatedScreeningFeedb
     Uses OpenAI GPT to provide supportive insights based on ASSIST, PHQ-9, and Triggers
     """
     try:
-        client = OpenAI(api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_BASE_URL)
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
         # Prepare context for AI
         context = prepare_validated_screening_context(request)
 
         # Generate feedback using OpenAI
-        response = client.chat.completions.create(
+        prompt = f"""
+{get_system_prompt()}
+
+{context}
+"""
+
+        response = client.models.generate_content(
             model=settings.MODEL_NAME,
-            temperature=0.8,  # Slightly higher for more natural, varied responses
-            max_tokens=2000,  # Increased for detailed, personalized feedback
-            messages=[
-                {
-                    "role": "system",
-                    "content": get_validated_screening_system_prompt()
-                },
-                {
-                    "role": "user",
-                    "content": context
-                }
-            ]
+            contents=prompt
         )
 
         # Parse AI response
-        ai_response = response.choices[0].message.content
+        ai_response = response.text
         feedback = parse_ai_feedback(ai_response)
 
         return {
