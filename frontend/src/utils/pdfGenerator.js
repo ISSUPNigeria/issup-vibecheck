@@ -168,6 +168,139 @@ const getSubstanceHarms = (substanceName) => {
   return SUBSTANCE_HARMS[key] || SUBSTANCE_HARMS.other
 }
 
+// ============================================================================
+// ASSIST per-question answer options — mirrors ASSISTQuestions.jsx QUESTIONS,
+// used to translate the raw score embedded in each substance's `calculation`
+// string (e.g. "Q2(4)") back into the label the user actually clicked ("Weekly").
+// ============================================================================
+const ASSIST_QUESTION_OPTIONS = {
+  2: {
+    shortText: 'Frequency of Use',
+    options: [
+      { label: 'Never', score: 0 },
+      { label: 'Once or Twice', score: 2 },
+      { label: 'Monthly', score: 3 },
+      { label: 'Weekly', score: 4 },
+      { label: 'Daily or Almost Daily', score: 6 }
+    ]
+  },
+  3: {
+    shortText: 'Strong Desire or Urge',
+    options: [
+      { label: 'Never', score: 0 },
+      { label: 'Once or Twice', score: 3 },
+      { label: 'Monthly', score: 4 },
+      { label: 'Weekly', score: 5 },
+      { label: 'Daily or Almost Daily', score: 6 }
+    ]
+  },
+  4: {
+    shortText: 'Problems Caused',
+    options: [
+      { label: 'Never', score: 0 },
+      { label: 'Once or Twice', score: 4 },
+      { label: 'Monthly', score: 5 },
+      { label: 'Weekly', score: 6 },
+      { label: 'Daily or Almost Daily', score: 7 }
+    ]
+  },
+  5: {
+    shortText: 'Failed Expectations',
+    options: [
+      { label: 'Never', score: 0 },
+      { label: 'Once or Twice', score: 5 },
+      { label: 'Monthly', score: 6 },
+      { label: 'Weekly', score: 7 },
+      { label: 'Daily or Almost Daily', score: 8 }
+    ]
+  },
+  6: {
+    shortText: 'Concern from Others',
+    options: [
+      { label: 'No, Never', score: 0 },
+      { label: 'Yes, in the past 3 months', score: 6 },
+      { label: 'Yes, but not in the past 3 months', score: 3 }
+    ]
+  },
+  7: {
+    shortText: 'Tried to Control',
+    options: [
+      { label: 'No, Never', score: 0 },
+      { label: 'Yes, in the past 3 months', score: 6 },
+      { label: 'Yes, but not in the past 3 months', score: 3 }
+    ]
+  }
+}
+
+// Parses a calculation string like "Q2(4) + Q3(5) + Q6(0) = 9" into
+// [{ qNum: 2, score: 4 }, { qNum: 3, score: 5 }, { qNum: 6, score: 0 }]
+const parseAssistCalculation = (calculation) => {
+  if (!calculation || typeof calculation !== 'string') return []
+  const matches = [...calculation.matchAll(/Q(\d+)\((\d+)\)/g)]
+  return matches.map(m => ({ qNum: parseInt(m[1], 10), score: parseInt(m[2], 10) }))
+}
+
+const getAssistAnswerLabel = (qNum, score) => {
+  const q = ASSIST_QUESTION_OPTIONS[qNum]
+  if (!q) return `Score ${score}`
+  const opt = q.options.find(o => o.score === score)
+  return opt ? opt.label : `Score ${score}`
+}
+
+// ============================================================================
+// PHQ-9 per-question text, in the same order/keys as phq9_results.individual_scores
+// ============================================================================
+const PHQ9_QUESTIONS = [
+  { key: 'q1_interest', text: 'Little interest or pleasure in doing things' },
+  { key: 'q2_depressed', text: 'Feeling down, depressed, or hopeless' },
+  { key: 'q3_sleep', text: 'Trouble falling or staying asleep, or sleeping too much' },
+  { key: 'q4_tired', text: 'Feeling tired or having little energy' },
+  { key: 'q5_appetite', text: 'Poor appetite or overeating' },
+  { key: 'q6_failure', text: 'Feeling bad about yourself, or that you are a failure or have let yourself or your family down' },
+  { key: 'q7_concentration', text: 'Trouble concentrating on things' },
+  { key: 'q8_movement', text: 'Moving or speaking slowly, or being fidgety/restless' },
+  { key: 'q9_selfharm', text: 'Thoughts that you would be better off dead or of hurting yourself' }
+]
+
+const PHQ9_SCALE = [
+  { label: 'Not at all', value: 0 },
+  { label: 'Several days', value: 1 },
+  { label: 'More than half the days', value: 2 },
+  { label: 'Nearly every day', value: 3 }
+]
+
+const getPhq9AnswerLabel = (value) => {
+  const opt = PHQ9_SCALE.find(o => o.value === value)
+  return opt ? opt.label : `Score ${value}`
+}
+
+// ============================================================================
+// PGSI per-question text and scale, matching pgsi_results.individual_scores (q1..q9)
+// ============================================================================
+const PGSI_QUESTIONS = [
+  { key: 'q1', text: 'Bet more than you could really afford to lose' },
+  { key: 'q2', text: 'Needed to gamble with larger amounts to get the same excitement' },
+  { key: 'q3', text: 'Went back another day to try to win back money lost' },
+  { key: 'q4', text: 'Borrowed money or sold anything to gamble' },
+  { key: 'q5', text: 'Felt that you might have a problem with gambling' },
+  { key: 'q6', text: 'Gambling caused health problems, including stress or anxiety' },
+  { key: 'q7', text: 'People criticised your betting or said you had a gambling problem' },
+  { key: 'q8', text: 'Gambling caused financial problems for you or your household' },
+  { key: 'q9', text: 'Felt guilty about the way you gamble or what happens when you gamble' }
+]
+
+const PGSI_SCALE = [
+  { label: 'Never', value: 0 },
+  { label: 'Sometimes', value: 1 },
+  { label: 'Most of the time', value: 2 },
+  { label: 'Almost always', value: 3 }
+]
+
+const getPgsiAnswerLabel = (value) => {
+  const opt = PGSI_SCALE.find(o => o.value === value)
+  return opt ? opt.label : `Score ${value}`
+}
+
 /**
  * Generate a full PDF report for validated screening results.
  * Renders one section per completed instrument — a section is skipped
@@ -524,6 +657,17 @@ export const generateScreeningPDF = async (results) => {
 
         checkNewPage(30)
         addSubsectionTitle(displayName.charAt(0).toUpperCase() + displayName.slice(1))
+
+        // Your Responses — the actual answer picked for each question (e.g. "Weekly")
+        const parsedAnswers = parseAssistCalculation(data.calculation)
+        if (parsedAnswers.length > 0) {
+          const answerRows = parsedAnswers.map(({ qNum, score }) => {
+            const qInfo = ASSIST_QUESTION_OPTIONS[qNum]
+            return [qInfo ? qInfo.shortText : `Question ${qNum}`, getAssistAnswerLabel(qNum, score)]
+          })
+          drawTable(['Question', 'Your Answer'], answerRows, [contentWidth * 0.55, contentWidth * 0.45])
+        }
+
         addText(harmData.statement, 9, colors.darkText, true)
         addBulletList(harmData.harms, 8.5, colors.lightText)
         yPosition += 2
@@ -609,6 +753,16 @@ export const generateScreeningPDF = async (results) => {
     if (pgsi_results.recommendation) {
       addKeyValue('Recommendation', pgsi_results.recommendation)
     }
+
+    // Your Responses — every question and the answer the user selected
+    if (pgsi_results.individual_scores) {
+      yPosition += 3
+      addSubsectionTitle('Your Responses')
+      const answerRows = PGSI_QUESTIONS
+        .filter(q => pgsi_results.individual_scores[q.key] !== undefined)
+        .map(q => [q.text, getPgsiAnswerLabel(pgsi_results.individual_scores[q.key])])
+      drawTable(['Question', 'Your Answer'], answerRows, [contentWidth * 0.7, contentWidth * 0.3])
+    }
     yPosition += 4
   }
 
@@ -654,6 +808,16 @@ export const generateScreeningPDF = async (results) => {
 
     if (phq9_results.functional_impairment) {
       addKeyValue('Functional Impact', phq9_results.functional_impairment.replace(/_/g, ' '))
+    }
+
+    // Your Responses — every question and the answer the user selected
+    if (phq9_results.individual_scores) {
+      yPosition += 3
+      addSubsectionTitle('Your Responses')
+      const answerRows = PHQ9_QUESTIONS
+        .filter(q => phq9_results.individual_scores[q.key] !== undefined)
+        .map(q => [q.text, getPhq9AnswerLabel(phq9_results.individual_scores[q.key])])
+      drawTable(['Question', 'Your Answer'], answerRows, [contentWidth * 0.7, contentWidth * 0.3])
     }
 
     if (phq9_results.suicidal_ideation) {
