@@ -110,10 +110,10 @@ async def start_conversation(
                 timeout=30.0
             )
 
-print("=" * 80)
-print("STATUS:", response.status_code)
-print("BODY:", response.text)
-print("=" * 80)
+            print("=" * 80)
+            print("STATUS:", response.status_code)
+            print("BODY:", response.text)
+            print("=" * 80)
 
             if response.status_code != 200:
                 raise HTTPException(
@@ -135,18 +135,14 @@ print("=" * 80)
     except httpx.RequestError as e:
         raise HTTPException(status_code=503, detail=f"AI Engine unavailable: {str(e)}")
     except Exception as e:
-    import traceback
+        import traceback
 
-    print("=" * 80)
-    print("CHAT START ERROR")
-    print(repr(e))
-    print(traceback.format_exc())
-    print("=" * 80)
+        print("=" * 80)
+        print("ERROR:", str(e))
+        traceback.print_exc()
+        print("=" * 80)
 
-    raise HTTPException(
-        status_code=500,
-        detail=f"Error starting conversation: {str(e)}"
-    )
+    
 
 
 @router.post("/message", response_model=SendMessageResponse)
@@ -231,10 +227,10 @@ async def send_message(
                 )
 
             ai_response = response.json()
-	    print("=" * 80)
-print("AI RESPONSE JSON:")
-print(ai_response)
-print("=" * 80)
+            print("=" * 80)
+            print("AI RESPONSE JSON:")
+            print(ai_response)
+            print("=" * 80)
             ai_message = ai_response["message"]
 
             # Save user message + AI response to DB for registered users
