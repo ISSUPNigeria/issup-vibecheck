@@ -218,6 +218,16 @@ async def submit_validated_screening(
         # Registered users: permanent (no expiry). Guests: expire in 24h.
         expires_at = None if current_user else datetime.utcnow() + timedelta(hours=24)
 
+        # Resolve nickname for the session (ScreeningSession.nickname is NOT NULL):
+        # - Logged-in users: pulled from their JWT (set at signup, see AuthModal.jsx)
+        # - Guests: whatever they typed in the optional demographics nickname field,
+        #   or "Guest" if they left it blank
+        if current_user:
+            nickname = current_user.get("nickname") or "Guest"
+        else:
+            guest_nickname = (submission.demographics.nickname or "").strip()
+            nickname = guest_nickname or "Guest"
+
         # Store results in database
         results_data = {
             "assist": assist_results.dict(),
@@ -232,6 +242,7 @@ async def submit_validated_screening(
         session = ScreeningSession(
             session_id=session_id,
             user_id=current_user["user_id"] if current_user else None,
+            nickname=nickname,
             demographics=submission.demographics.dict(),
             responses={
                 "assist": submission.assist.dict(),
