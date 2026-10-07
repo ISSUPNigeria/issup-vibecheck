@@ -60,6 +60,9 @@ class ScreeningQuestionsListResponse(BaseModel):
     total: int
 
 class Demographics(BaseModel):
+    # Guest-only, optional nickname. Logged-in users already have one from signup,
+    # so the frontend only shows/sends this field for guest sessions.
+    nickname: Optional[str] = None
     age: Optional[str] = None
     gender: Optional[str] = None
     city: Optional[str] = None
