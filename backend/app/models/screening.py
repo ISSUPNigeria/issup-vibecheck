@@ -66,6 +66,7 @@ class ScreeningSession(Base):
 
     session_id = Column(String(255), primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    nickname = Column(String(100), nullable=False)
     demographics = Column(JSON, nullable=True)  # JSON object with user demographics
     responses = Column(JSON, nullable=False)  # JSON object with question_id: answer
     results = Column(JSON, nullable=True)  # JSON object with scoring results
