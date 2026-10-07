@@ -61,7 +61,12 @@ const NIGERIAN_STATES = [
 ]
 
 function DemographicsStep({ demographics, onUpdate, onComplete }) {
+  // Guest = no auth_token in localStorage (same check used in ChatInterface.jsx).
+  // Logged-in users already supplied a nickname at signup, so we don't ask again.
+  const isGuest = !localStorage.getItem('auth_token')
+
   const [formData, setFormData] = useState(demographics || {
+    nickname: '',
     age: '',
     gender: '',
     city: '',
@@ -118,6 +123,23 @@ function DemographicsStep({ demographics, onUpdate, onComplete }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {/* Nickname — guests only; logged-in users already have one from signup. Optional, so it doesn't add friction. */}
+          {isGuest && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nickname <span className="text-gray-400">(Optional)</span>
+                <span className="text-gray-400 font-normal"> — what should we call you?</span>
+              </label>
+              <input
+                type="text"
+                value={formData.nickname}
+                onChange={(e) => handleChange('nickname', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple/50"
+                placeholder="e.g. Emeka (leave blank to stay anonymous)"
+              />
+            </div>
+          )}
+
           {/* Age */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
